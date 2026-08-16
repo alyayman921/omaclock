@@ -9,13 +9,18 @@ import qs.Commons
 Item {
   id: root
 
-  // Bundled Apple-like font (Inter, OFL) so no system install is needed.
+  // Bundled fonts (OFL) so no system install is needed. Plus Jakarta Sans is
+  // the default (premium, Apple-like, taller x-height); Inter is the fallback.
   FontLoader {
     id: bundledFont
     source: Qt.resolvedUrl("fonts/InterVariable.ttf")
   }
+  FontLoader {
+    id: appleFont
+    source: Qt.resolvedUrl("fonts/PlusJakartaSans-Variable.ttf")
+  }
 
-  readonly property string configPath: Quickshell.env("HOME") + "/.config/omarchy/plugins/ubeyidah.omaclock/config.json"
+  readonly property string configPath: Quickshell.env("HOME") + "/.config/omaclock/config.json"
 
   readonly property var defaults: ({
     format: "HH:mm",
@@ -78,9 +83,11 @@ Item {
     return Qt.formatDateTime(date, fmt)
   }
 
-  readonly property string activeFont: root.settings.fontFamily
-    ? root.settings.fontFamily
-    : bundledFont.name
+  // Font resolution: "system" uses the platform default font (empty family),
+  // an explicit name is used as-is, and empty falls back to bundled Inter.
+  readonly property string activeFont: root.settings.fontFamily === "system"
+    ? ""
+    : (root.settings.fontFamily ? root.settings.fontFamily : root.bundledFont.name)
 
   // Empty `color` follows a softened version of the active theme's accent
   // (blended toward the theme foreground) so the clock shows the theme's color
