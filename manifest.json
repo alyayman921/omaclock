@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "id": "ubeyidah.omaclock",
   "name": "OmaClock",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "ubeyidah",
-  "description": "A simple, minimal desktop clock widget rendered behind all windows on the bottom layer.",
+  "description": "A simple, minimal desktop clock widget rendered behind all windows on the bottom layer, with theme-aware colors.",
   "kinds": ["service"],
   "keepLoaded": true,
   "entryPoints": {

@@ -10,7 +10,7 @@ click-through time display living on your desktop like a wallpaper.
   AM/PM (e.g. `1:30`, `13:30`, `1:30 PM`, `1:30:05`)
 - Bundled **Inter** typeface (OFL-licensed) — no system font install needed;
   override with any installed font
-- Adjustable size, weight, letter spacing, color, opacity, and position
+- Theme-aware color by default (a softened accent that follows your active Omarchy theme), or set a fixed CSS color; adjustable size, weight, letter spacing, opacity, and position
 - Single `config.json`, hot-reloaded (~2s) on save
 
 ## Install
@@ -38,7 +38,7 @@ clock reloads within ~2 seconds.
 | `fontWeight`   | `200`       | Numerals weight (100–900; 200 = thin).                             |
 | `fontScale`    | `0.15`      | Font size as a fraction of screen height (0.15 = 15%).            |
 | `letterSpacing`| `-3`        | Tightens the numerals for a compact, minimal look.                 |
-| `color`        | `#ffffff`   | Clock color (any CSS color).                                       |
+| `color`        | `""`        | Clock color. Empty (`""`) follows a softened version of the active theme's accent (blended toward the theme foreground) and recolors when you switch themes; set any CSS color (e.g. `#ffffff`) to override. |
 | `opacity`      | `0.92`      | Clock opacity.                                                     |
 | `position`     | `top`       | `top` / `center` / `bottom` (used when `yRatio` is unset).         |
 | `yRatio`       | `0.20`      | Vertical position as a 0–1 ratio of screen height.                 |

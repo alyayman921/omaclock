@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
+import qs.Commons
 
 // Large desktop clock rendered on the bottom layer, behind every app window
 // but above the wallpaper. Hot-reloads when config.json is edited.
@@ -23,7 +24,7 @@ Item {
     fontWeight: 200,
     fontScale: 0.20,
     letterSpacing: -3,
-    color: "#ffffff",
+    color: "",
     opacity: 0.92,
     position: "center",
     xRatio: null,
@@ -80,6 +81,23 @@ Item {
   readonly property string activeFont: root.settings.fontFamily
     ? root.settings.fontFamily
     : bundledFont.name
+
+  // Empty `color` follows a softened version of the active theme's accent
+  // (blended toward the theme foreground) so the clock shows the theme's color
+  // identity without being harsh. A non-empty value is an explicit override.
+  // Recolors live when the theme changes (Color is a live singleton).
+  function mix(c1, c2, t) {
+    return Qt.rgba(
+      c1.r * (1 - t) + c2.r * t,
+      c1.g * (1 - t) + c2.g * t,
+      c1.b * (1 - t) + c2.b * t,
+      1.0
+    )
+  }
+  readonly property color themeColor: root.mix(Color.accent, Color.foreground, 0.30)
+  readonly property color activeColor: root.settings.color
+    ? Qt.color(root.settings.color)
+    : root.themeColor
   readonly property real xRatio: (typeof root.settings.xRatio === "number")
     ? root.settings.xRatio : 0.5
   readonly property real yRatio: (typeof root.settings.yRatio === "number")
@@ -114,7 +132,7 @@ Item {
 
         Text {
           id: clockText
-          color: root.settings.color
+          color: root.activeColor
           opacity: root.settings.opacity
           font.family: root.activeFont
           font.weight: root.settings.fontWeight
