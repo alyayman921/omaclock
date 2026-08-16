@@ -4,15 +4,17 @@ A simple, minimal desktop clock widget for [Omarchy](https://omarchy.org/) that
 renders **behind all of your open windows** on the bottom layer — a clean,
 click-through time display living on your desktop like a wallpaper.
 
+![Preview](preview.png)
+
 ## Features
 
 - Renders behind every app window on the bottom layer (click-through; desktop
   and wallpaper interactions keep working).
 - Fully configurable time format — 12-hour, 24-hour, with seconds, and optional
   AM/PM (e.g. `1:30`, `13:30`, `1:30 PM`, `1:30:05`).
-- **Theme-aware color** by default: a softened version of your active Omarchy
-  theme's accent (blended toward the theme foreground) that recolors live when
-  you switch themes. Set a fixed CSS color to override.
+- **Theme-aware color** by default: matches your top status bar's text color
+  (`Color.bar.text`), so it adapts to the theme and wallpaper just like the bar.
+  Set a fixed CSS color to override.
 - Bundled **Inter** typeface (OFL) as the default font — no system install
   needed. Also bundles **Plus Jakarta Sans** (OFL) as an optional Apple-like
   alternative, and you can use any installed system font.
@@ -42,7 +44,7 @@ within ~2 seconds.
 | `fontWeight`    | `200`               | Numerals weight, 100–900 (200 = thin, 400 = regular).                      |
 | `fontScale`     | `0.15`              | Font size as a fraction of screen height (0.15 = 15%).                     |
 | `letterSpacing` | `-3`                | Extra spacing between numerals (negative tightens them).                   |
-| `color`         | `""`                | Clock color. `""` follows a softened version of the active theme's accent and recolors on theme switch; any CSS color (e.g. `#ffffff`) overrides it. |
+| `color`         | `""`                | Clock color. `""` matches the top status bar's text color (theme/wallpaper-aware); any CSS color (e.g. `#ffffff`) overrides it. |
 | `opacity`       | `0.92`              | Clock opacity, 0–1.                                                         |
 | `position`      | `top`               | Vertical anchor used when `yRatio` is not set: `top` / `center` / `bottom`. |
 | `yRatio`        | `0.20`              | Vertical position as a 0–1 ratio of screen height (overrides `position`).   |
@@ -51,10 +53,11 @@ within ~2 seconds.
 
 ### Color & theming
 
-With `color` left empty, the clock uses a softened accent derived from your
-active Omarchy theme, so it always harmonizes with your setup and updates the
-moment you switch themes (`omarchy theme set …`). To pin a specific color, set
-`color` to any CSS color string.
+With `color` left empty, the clock uses the exact color Omarchy uses for the
+top status bar's text (`Color.bar.text`), so it stays in sync with the theme
+and wallpaper just like the bar — updating the moment you switch themes
+(`omarchy theme set …`). To pin a specific color, set `color` to any CSS color
+string.
 
 ### Fonts
 
@@ -76,7 +79,7 @@ Bigger, centered, with seconds:
 }
 ```
 
-Soft theme accent, Inter, lower on the screen:
+Bar-matching color, Inter, lower on the screen:
 
 ```json
 {

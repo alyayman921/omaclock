@@ -9,8 +9,8 @@ import qs.Commons
 Item {
   id: root
 
-  // Bundled fonts (OFL) so no system install is needed. Plus Jakarta Sans is
-  // the default (premium, Apple-like, taller x-height); Inter is the fallback.
+  // Bundled fonts (OFL) so no system install is needed. Inter is the default;
+  // Plus Jakarta Sans is an opt-in family via `fontFamily`.
   FontLoader {
     id: bundledFont
     source: Qt.resolvedUrl("fonts/InterVariable.ttf")
@@ -84,24 +84,15 @@ Item {
   }
 
   // Font resolution: "system" uses the platform default font (empty family),
-  // an explicit name is used as-is, and empty falls back to bundled Inter.
+  // an explicit name is used as-is, and empty falls back to bundled Inter
+  // ("Inter Variable" is the family name the bundled file registers).
   readonly property string activeFont: root.settings.fontFamily === "system"
     ? ""
-    : (root.settings.fontFamily ? root.settings.fontFamily : root.bundledFont.name)
+    : (root.settings.fontFamily ? root.settings.fontFamily : "Inter Variable")
 
-  // Empty `color` follows a softened version of the active theme's accent
-  // (blended toward the theme foreground) so the clock shows the theme's color
-  // identity without being harsh. A non-empty value is an explicit override.
-  // Recolors live when the theme changes (Color is a live singleton).
-  function mix(c1, c2, t) {
-    return Qt.rgba(
-      c1.r * (1 - t) + c2.r * t,
-      c1.g * (1 - t) + c2.g * t,
-      c1.b * (1 - t) + c2.b * t,
-      1.0
-    )
-  }
-  readonly property color themeColor: root.mix(Color.accent, Color.foreground, 0.30)
+  // Empty `color` follows the top bar's text color (Color.bar.text), which is
+  // theme- and wallpaper-aware. A non-empty value is an explicit override.
+  readonly property color themeColor: Color.bar.text
   readonly property color activeColor: root.settings.color
     ? Qt.color(root.settings.color)
     : root.themeColor
