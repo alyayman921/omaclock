@@ -66,10 +66,13 @@ Item {
 
   // This Qt build only emits 12-hour (1-12) when an AP token is present,
   // otherwise `h` falls back to 24-hour. So for a 12-hour format without
-  // AM/PM we render with AP and strip the suffix.
+  // AM/PM we render with AP and strip the suffix. A single-digit hour is
+  // zero-padded so the prefix stays stable across minute ticks (e.g. the
+  // config loads as `h:mm` but the initial paint uses the `HH:mm` default).
   function clockString(date, fmt) {
-    if (/h/.test(fmt) && !/AP/i.test(fmt)) {
-      return Qt.formatDateTime(date, fmt + " AP").replace(/\s*(AM|PM)$/i, "").trim()
+    if (/h/i.test(fmt) && !/AP/i.test(fmt)) {
+      var s = Qt.formatDateTime(date, fmt + " AP").replace(/\s*(AM|PM)$/i, "").trim()
+      return s.replace(/^(\d)(?=:)/, "0$1")
     }
     return Qt.formatDateTime(date, fmt)
   }
