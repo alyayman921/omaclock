@@ -4,7 +4,7 @@
   "name": "OmaClock",
   "version": "1.0.0",
   "author": "ubeyidah",
-  "description": "Large Apple-style clock rendered behind all windows on the desktop (bottom) layer.",
+  "description": "A simple, minimal desktop clock widget rendered behind all windows on the bottom layer.",
   "kinds": ["service"],
   "keepLoaded": true,
   "entryPoints": {

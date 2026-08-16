@@ -1,14 +1,17 @@
 # OmaClock
 
-A large, Apple-style desktop clock for [Omarchy](https://omarchy.org/) that
-renders **behind all of your open windows** on the bottom layer — like a
-wallpaper clock you can't click through.
+A simple, minimal desktop clock widget for [Omarchy](https://omarchy.org/)
+that renders **behind all of your open windows** on the bottom layer — a clean,
+click-through time display living on your desktop like a wallpaper.
 
-- 12-hour display with **no AM/PM** clutter (e.g. `12:43`, `1:30`, `11:59`)
-- Bundled **Inter** typeface (OFL-licensed) — no system font install needed
-- Thin, tall numerals sized as a fraction of your screen height
-- Fully configurable from a single `config.json`
-- Click-through: desktop and wallpaper interactions keep working
+- Renders behind every app window on the bottom layer (click-through; desktop
+  and wallpaper interactions keep working)
+- Fully configurable time format — 12-hour, 24-hour, with seconds, and optional
+  AM/PM (e.g. `1:30`, `13:30`, `1:30 PM`, `1:30:05`)
+- Bundled **Inter** typeface (OFL-licensed) — no system font install needed;
+  override with any installed font
+- Adjustable size, weight, letter spacing, color, opacity, and position
+- Single `config.json`, hot-reloaded (~2s) on save
 
 ## Install
 
@@ -29,12 +32,12 @@ clock reloads within ~2 seconds.
 
 | Key            | Default     | Description                                                        |
 |----------------|-------------|--------------------------------------------------------------------|
-| `format`       | `h:mm`      | Time format. `h:mm` = 12h no AM/PM, `HH:mm` = 24h, `h:mm:ss` = secs |
+| `format`       | `h:mm`      | Qt time format. `h:mm` = 12h, `HH:mm` = 24h, `h:mm AP` = 12h with AM/PM, `h:mm:ss` = with seconds |
 | `showSeconds`  | `false`     | Tick every second instead of every minute.                         |
 | `fontFamily`   | `""`        | Empty = bundled Inter. Set any installed family to override.       |
 | `fontWeight`   | `200`       | Numerals weight (100–900; 200 = thin).                             |
 | `fontScale`    | `0.15`      | Font size as a fraction of screen height (0.15 = 15%).            |
-| `letterSpacing`| `-3`        | Tightens the numerals for an Apple-like look.                      |
+| `letterSpacing`| `-3`        | Tightens the numerals for a compact, minimal look.                 |
 | `color`        | `#ffffff`   | Clock color (any CSS color).                                       |
 | `opacity`      | `0.92`      | Clock opacity.                                                     |
 | `position`     | `top`       | `top` / `center` / `bottom` (used when `yRatio` is unset).         |
