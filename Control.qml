@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Quickshell
+import Quickshell.Io
 import qs.Commons
 import qs.Ui
 
@@ -25,6 +26,28 @@ BarWidget {
     property string mode: "auto"
     property string colorRole: "bar.text"
     property string customColor: "#ffffff"
+    // Font selector state
+    property bool fontTabOpen: false
+    property var fontOptions: []
+    property bool fontListLoaded: false
+    property string selectedFont: ""
+    property string fontSearch: ""
+    property var filteredFonts: []
+
+    function recomputeFontFilter() {
+        var q = String(root.fontSearch || "").trim().toLowerCase();
+        if (!q) {
+            root.filteredFonts = root.fontOptions;
+            return;
+        }
+        var out = [];
+        for (var i = 0; i < root.fontOptions.length; i++) {
+            var o = root.fontOptions[i];
+            var label = (o && o.label !== undefined) ? String(o.label) : String(o);
+            if (label.toLowerCase().indexOf(q) !== -1) out.push(o);
+        }
+        root.filteredFonts = out;
+    }
     // Index of the 3x3 position cell the clock currently sits in, or -1 while
     // a slider is being dragged. Live-synced so the grid highlight follows both
     // slider edits and direct cell clicks.
@@ -73,13 +96,47 @@ BarWidget {
         return false;
     }
 
+    function toggle() {
+        if (root.menuOpen) root.close();
+        else root.open();
+    }
+
+    readonly property bool opened: root.menuOpen
+
+    // Font list loader — runs omarchy-font-list on first open and caches
+    // the result. The list is filtered to monospace fonts only, matching
+    // what omarchy-font-set accepts.
+    property Process fontListProc: Process {
+        id: fontListProc
+        command: ["bash", "-lc", "omarchy-font-list 2>/dev/null"]
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                var output = String(text || "").trim()
+                if (output.length > 0) {
+                    var lines = output.split("\n")
+                    var opts = []
+                    for (var i = 0; i < lines.length; i++) {
+                        var name = lines[i].trim()
+                        if (name.length > 0) opts.push({ value: name, label: name })
+                    }
+                    root.fontOptions = opts
+                    root.fontListLoaded = true
+                    root.recomputeFontFilter()
+                }
+            }
+        }
+    }
+
     function open() {
         root.syncFromService();
+        if (!root.fontListLoaded) root.fontListProc.running = true
         root.menuOpen = true;
     }
 
     function close() {
         root.menuOpen = false;
+        root.fontTabOpen = false;
     }
 
     function syncFromService() {
@@ -89,6 +146,25 @@ BarWidget {
         root.mode = String(root.svc.settings.colorMode || "auto");
         root.colorRole = String(root.svc.settings.colorRole || "bar.text");
         root.customColor = String(root.svc.settings.color || "#ffffff");
+        root.selectedFont = String(root.svc.settings.fontFamily || "");
+    }
+
+    function setFontFamily(font) {
+        if (!root.svc) return;
+        root.selectedFont = font;
+        var next = {};
+        for (var k in root.svc.settings) next[k] = root.svc.settings[k]
+        next.fontFamily = font;
+        root.svc.settings = next;
+        root.svc.saveConfig();
+    }
+
+    function openFontTab() {
+        root.fontTabOpen = true;
+        if (!root.fontListLoaded) root.fontListProc.running = true
+        Qt.callLater(function() {
+            if (root.fontTabOpen && fontSearchField) fontSearchField.forceActiveFocus()
+        })
     }
 
     function colorFor(role) {
@@ -117,6 +193,7 @@ BarWidget {
     }
 
     function setMode(m) {
+        root.fontTabOpen = false;
         root.mode = m;
         if (!root.svc)
             return ;
@@ -131,6 +208,7 @@ BarWidget {
     }
 
     function pickThemeColor(role) {
+        root.fontTabOpen = false;
         root.colorRole = role;
         root.mode = "theme";
         if (root.svc) {
@@ -222,13 +300,14 @@ BarWidget {
         }
     }
 
-    PopupCard {
+    KeyboardPanel {
         id: popup
 
         anchorItem: button
         owner: root
         bar: root.bar
         open: root.menuOpen
+        focusTarget: root.fontTabOpen ? fontSearchField : null
         contentWidth: popup.fittedContentWidth(Style.space(300))
         contentHeight: popup.fittedContentHeight(column.implicitHeight, Style.space(560))
 
@@ -249,6 +328,7 @@ BarWidget {
             }
 
             Row {
+                visible: !root.fontTabOpen
                 width: parent.width
                 spacing: Style.space(6)
 
@@ -274,6 +354,7 @@ BarWidget {
             PanelSlider {
                 id: sizeSlider
 
+                visible: !root.fontTabOpen
                 width: parent.width
                 minimum: 5
                 maximum: 45
@@ -288,6 +369,7 @@ BarWidget {
             }
 
             Row {
+                visible: !root.fontTabOpen
                 width: parent.width
                 spacing: Style.space(6)
 
@@ -313,6 +395,7 @@ BarWidget {
             PanelSlider {
                 id: xSlider
 
+                visible: !root.fontTabOpen
                 width: parent.width
                 minimum: 0
                 maximum: 100
@@ -327,6 +410,7 @@ BarWidget {
             }
 
             Row {
+                visible: !root.fontTabOpen
                 width: parent.width
                 spacing: Style.space(6)
 
@@ -352,6 +436,7 @@ BarWidget {
             PanelSlider {
                 id: ySlider
 
+                visible: !root.fontTabOpen
                 width: parent.width
                 minimum: 0
                 maximum: 100
@@ -366,6 +451,7 @@ BarWidget {
             }
 
             Text {
+                visible: !root.fontTabOpen
                 text: "POSITION"
                 color: Color.popups.text
                 font.family: Style.font.family
@@ -375,6 +461,7 @@ BarWidget {
             }
 
             Grid {
+                visible: !root.fontTabOpen
                 width: parent.width
                 columns: 3
                 rows: 3
@@ -463,10 +550,20 @@ BarWidget {
                     onClicked: root.setMode("custom")
                 }
 
+                Button {
+                    text: "Font"
+                    selected: root.fontTabOpen
+                    foreground: Color.popups.text
+                    horizontalPadding: Style.space(10)
+                    verticalPadding: 4
+                    fontSize: Style.font.bodySmall
+                    onClicked: root.openFontTab()
+                }
+
             }
 
             Flow {
-                visible: root.mode === "theme"
+                visible: root.mode === "theme" && !root.fontTabOpen
                 width: parent.width
                 spacing: Style.space(8)
 
@@ -522,7 +619,7 @@ BarWidget {
             }
 
             Text {
-                visible: root.mode === "theme"
+                visible: root.mode === "theme" && !root.fontTabOpen
                 text: "Swatches track the active theme live."
                 color: Qt.darker(Color.popups.text, 1.5)
                 font.family: Style.font.family
@@ -531,7 +628,7 @@ BarWidget {
             }
 
             Row {
-                visible: root.mode === "custom"
+                visible: root.mode === "custom" && !root.fontTabOpen
                 width: parent.width
                 spacing: Style.space(6)
 
@@ -563,6 +660,147 @@ BarWidget {
 
             }
 
+            // --- Font selector tab -------------------------------------------------
+            Item {
+                visible: root.fontTabOpen
+                width: parent.width
+                implicitHeight: fontColumn.implicitHeight
+
+                Column {
+                    id: fontColumn
+                    width: parent.width
+                    spacing: Style.space(8)
+
+                    Text {
+                        text: "FONT"
+                        color: Color.popups.text
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                        topPadding: Style.space(4)
+                    }
+
+                    Row {
+                        width: parent.width
+                        spacing: Style.space(6)
+
+                        Text {
+                            text: "Current"
+                            color: Color.popups.text
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.body
+                            width: parent.width - currentFontLabel.implicitWidth - parent.spacing
+                        }
+
+                        Text {
+                            id: currentFontLabel
+                            text: root.selectedFont.length > 0 ? root.selectedFont : "Default (Inter)"
+                            color: Qt.darker(Color.popups.text, 1.4)
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.body
+                            elide: Text.ElideRight
+                        }
+
+                    }
+
+                    TextField {
+                        id: fontSearchField
+                        width: parent.width
+                        activeFocusOnTab: true
+                        placeholderText: "Search fonts..."
+                        text: root.fontSearch
+                        foreground: Color.popups.text
+                        accent: Color.accent
+onTextChanged: {
+                        root.fontSearch = text
+                        root.recomputeFontFilter()
+                        fontList.currentIndex = -1
+                    }
+                    }
+
+                    Text {
+                        visible: !root.fontListLoaded
+                        text: "Loading fonts..."
+                        color: Qt.darker(Color.popups.text, 1.5)
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        font.italic: true
+                    }
+
+                    Text {
+                        visible: root.fontListLoaded && root.fontOptions.length === 0
+                        text: "No fonts found"
+                        color: Qt.darker(Color.popups.text, 1.5)
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        font.italic: true
+                    }
+
+                    Text {
+                        visible: root.fontListLoaded && root.fontOptions.length > 0 && root.filteredFonts.length === 0
+                        text: "No matches"
+                        color: Qt.darker(Color.popups.text, 1.5)
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.caption
+                        font.italic: true
+                    }
+
+                    Rectangle {
+                        visible: root.fontListLoaded && root.filteredFonts.length > 0
+                        width: parent.width
+                        height: Math.min(Style.space(200), root.filteredFonts.length * Style.space(28))
+                        radius: Style.cornerRadius
+                        color: "transparent"
+
+                        ListView {
+                            id: fontList
+                            anchors.fill: parent
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+                            model: root.filteredFonts
+                            currentIndex: -1
+
+                            delegate: Rectangle {
+                                required property var modelData
+                                required property int index
+                                readonly property string label: modelData !== undefined && modelData.label !== undefined
+                                    ? String(modelData.label) : String(modelData)
+                                readonly property string fontValue: modelData !== undefined && modelData.value !== undefined
+                                    ? String(modelData.value) : String(modelData)
+                                readonly property bool selected: root.selectedFont === fontValue
+
+                                width: fontList.width
+                                height: Style.space(28)
+                                radius: Math.max(2, Style.cornerRadius)
+                                color: fontList.currentIndex === index ? Style.selectedFill
+                                    : (selected ? Util.alpha(Color.accent, 0.18) : "transparent")
+
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: Style.space(8)
+                                    anchors.rightMargin: Style.space(8)
+                                    text: parent.label
+                                    color: fontList.currentIndex === index ? Color.accent : Color.popups.text
+                                    font.family: Style.font.family
+                                    font.pixelSize: Style.font.body
+                                    elide: Text.ElideRight
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPositionChanged: fontList.currentIndex = parent.index
+                                    onClicked: root.setFontFamily(parent.fontValue)
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+
             Row {
                 width: parent.width
                 spacing: Style.space(8)
@@ -570,6 +808,7 @@ BarWidget {
                 Rectangle {
                     id: resetBtn
 
+                    visible: !root.fontTabOpen
                     width: Style.space(88)
                     height: Style.space(26)
                     radius: Style.cornerRadius
