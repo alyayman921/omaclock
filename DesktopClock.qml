@@ -115,14 +115,15 @@ Item {
       anchors { top: true; bottom: true; left: true; right: true }
       color: "transparent"
       updatesEnabled: true
+      // Empty input region: without this, some Quickshell versions (0.3.x)
+      // let the fullscreen surface capture mouse input, breaking desktop
+      // interactions like Omarchy's double-click wallpaper switcher.
+      mask: Region {}
 
       WlrLayershell.namespace: root.settings.namespace
       WlrLayershell.layer: WlrLayer.Bottom
       WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
       exclusionMode: ExclusionMode.Ignore
-
-      // No MouseArea: the window is click-through so desktop/wallpaper
-      // interactions (e.g. double-click wallpaper switcher) still work.
 
       Item {
         id: surface
