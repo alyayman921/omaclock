@@ -23,15 +23,15 @@ Item {
   readonly property string configPath: Quickshell.env("HOME") + "/.config/omaclock/config.json"
 
   readonly property var defaults: ({
-    format: "HH:mm",
+    format: "h:mm",
     showSeconds: false,
     fontFamily: "",
     fontWeight: 200,
-    fontScale: 0.20,
+    fontScale: 0.15,
     letterSpacing: -3,
     color: "",
     opacity: 0.92,
-    position: "center",
+    position: "top",
     xRatio: null,
     yRatio: null,
     namespace: "ubeyidah.omaclock"
@@ -96,11 +96,18 @@ Item {
   readonly property color activeColor: root.settings.color
     ? Qt.color(root.settings.color)
     : root.themeColor
-  readonly property real xRatio: (typeof root.settings.xRatio === "number")
-    ? root.settings.xRatio : 0.5
-  readonly property real yRatio: (typeof root.settings.yRatio === "number")
-    ? root.settings.yRatio
-    : (root.settings.position === "top" ? 0.14
+  // Accept both JSON numbers and numeric strings ("0.3"), falling back when
+  // the value is null/missing/garbage.
+  function num(v, fallback) {
+    if (v === null || v === undefined || v === "") return fallback
+    var n = Number(v)
+    return isNaN(n) ? fallback : n
+  }
+
+  readonly property real xRatio: root.num(root.settings.xRatio, 0.5)
+  readonly property real yRatio: !isNaN(Number(root.settings.yRatio)) && root.settings.yRatio !== null && root.settings.yRatio !== ""
+    ? Number(root.settings.yRatio)
+    : (root.settings.position === "top" ? 0.20
       : root.settings.position === "bottom" ? 0.86 : 0.5)
 
   Variants {
@@ -129,13 +136,16 @@ Item {
         id: surface
         anchors.fill: parent
 
+        // Binding tracks clock.date directly, so format changes from
+        // config hot-reload re-evaluate immediately (an imperative
+        // onDateChanged assignment here would break this binding).
         Text {
           id: clockText
           color: root.activeColor
-          opacity: root.settings.opacity
+          opacity: Math.min(1, Math.max(0, root.num(root.settings.opacity, 0.92)))
           font.family: root.activeFont
           font.weight: root.settings.fontWeight
-          font.pixelSize: Math.max(8, Math.round(surface.height * root.settings.fontScale))
+          font.pixelSize: Math.max(8, Math.round(surface.height * root.num(root.settings.fontScale, 0.15)))
           font.letterSpacing: root.settings.letterSpacing
           text: root.clockString(clock.date, root.settings.format)
 
@@ -146,7 +156,6 @@ Item {
         SystemClock {
           id: clock
           precision: root.settings.showSeconds ? SystemClock.Seconds : SystemClock.Minutes
-          onDateChanged: clockText.text = root.clockString(date, root.settings.format)
         }
       }
     }
