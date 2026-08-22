@@ -120,6 +120,18 @@ Use the system font with a fixed white color:
 }
 ```
 
+## Troubleshooting
+
+**Desktop clicks stopped working (e.g. double-click wallpaper switcher).**
+On Quickshell 0.3.x the fullscreen clock layer can still capture mouse input
+even though it has no interactive elements. Fixed via an empty input mask
+(`mask: Region {}`). If you're on an older build, update the plugin:
+
+```bash
+omarchy plugin add https://github.com/ubeyidah/omaclock
+omarchy restart shell
+```
+
 ## Uninstall
 
 ```bash

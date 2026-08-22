@@ -104,8 +104,7 @@ BarWidget {
     readonly property bool opened: root.menuOpen
 
     // Font list loader — runs omarchy-font-list on first open and caches
-    // the result. The list is filtered to monospace fonts only, matching
-    // what omarchy-font-set accepts.
+    // the result. The full available font list is shown (no filtering).
     property Process fontListProc: Process {
         id: fontListProc
         command: ["bash", "-lc", "omarchy-font-list 2>/dev/null"]
