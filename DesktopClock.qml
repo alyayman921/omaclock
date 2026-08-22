@@ -103,7 +103,6 @@ Item {
       root._configApplied = true
     } catch (e) {
       root._configApplied = true
-      console.warn("omaclock: invalid config.json: " + e)
     }
   }
 
